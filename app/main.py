@@ -10,7 +10,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-# Rota segura para executar comandos
+# Rota segura para executar comandos!!!!!
 @app.get("/run-command")
 def run_command(cmd: str):
     """
