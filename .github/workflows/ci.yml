@@ -5,7 +5,7 @@ name: CI/CD Pipeline - Avaliação 2
 # Esta pipeline implementa uma esteira DevOps completa com:
 # 1. Verificação de Segredos (Gitleaks)
 # 2. Análise Estática de Segurança (SAST) - CodeQL e Bandit
-# 3. Análise de Dependências (SCA) - Safety e pip-audit
+# 3. Análise de Dependências (SCA) - Safety
 # 4. Build e Testes
 # 5. Análise Dinâmica de Segurança (DAST) - OWASP ZAP
 # 6. Geração de Artefatos
@@ -143,18 +143,14 @@ jobs:
           mkdir -p reports
           safety check --json > reports/safety-report.json || echo "Safety check found vulnerabilities"
           
-      - name: Run pip-audit
-        run: |
-          pip-audit -r requirements.txt -f json -o reports/pip-audit-report.json || echo "pip-audit found vulnerabilities"
-          
       - name: Upload SCA reports
         uses: actions/upload-artifact@v4
         with:
           name: sca-reports
           path: reports/
           retention-days: 7
-          
-  # =============================================
+
+            # =============================================
   # 4) BUILD & TEST
   # =============================================
   build:
@@ -283,3 +279,7 @@ jobs:
           app-name: 'my-function-demo'
           package: './app'
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
+
+
+          

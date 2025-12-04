@@ -74,6 +74,9 @@ local.settings.json
 # Dependabot
 dependabot-updates/
 
+# Pastas de evidências
+/prints_evidencias/
+
 # Reports
 dist/
 build/

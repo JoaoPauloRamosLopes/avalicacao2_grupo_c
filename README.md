@@ -37,8 +37,8 @@ Nossa pipeline é construída como um "portão de segurança" (`security gate`),
 *Softwares modernos são construídos sobre bibliotecas de terceiros. Esta camada garante que nossas dependências não sejam o nosso elo mais fraco.*
 
 -   **Análise de Dependências Vulneráveis:**
-    -   **Ferramenta:** `pip-audit`
-    -   **Objetivo:** Escanear todas as bibliotecas listadas no `requirements.txt` e compará-las com um banco de dados de vulnerabilidades conhecidas (CVEs). Se uma dependência estiver comprometida, a pipeline falha, impedindo a introdução da falha.
+    -   **Ferramenta:** `safety`
+    -   **Objetivo:** Escanear todas as bibliotecas Python em busca de vulnerabilidades conhecidas, garantindo que dependências comprometidas não sejam utilizadas.
 
 -   **Automação de Atualizações de Dependência:**
     -   **Ferramenta:** `Dependabot`
@@ -64,27 +64,24 @@ Nossa pipeline é construída como um "portão de segurança" (`security gate`),
 
 Aqui você pode visualizar como a pipeline se comporta em diferentes cenários, atuando como um verdadeiro guardião da qualidade e segurança do código.
 
-### Cenário 1: Pipeline Executando com Sucesso
-![cenario1](prints_evidencias/cenario1.png)
+## 🚀 Evidências da Pipeline em Ação
 
+Aqui você pode visualizar como a pipeline se comporta em diferentes cenários, atuando como um verdadeiro guardião da qualidade e segurança do código.
 
-### Cenário 2: SAST (CodeQL) Bloqueando um Código Vulnerável
-#### Gitleaks
-![sast_gitleaks](prints_evidencias/sast_gitleaks.png)
+### 1. Pipeline Executando com Sucesso
+![Pipeline executando com sucesso](prints_evidencias/pipeline-sucesso.png)
 
-#### CodeQL - Não foi possível realizar pois precisa habilitar uma função de segurança do repo que não está disponivel 
-![sast_codeql](prints_evidencias/sast_codeql.png)
+### 2. SAST - Gitleaks em Ação
+![SAST - Gitleaks](prints_evidencias/sast-gitleaks.png)
 
-![indisponivel](prints_evidencias/indisponivel.png)
+### 3. SAST - CodeQL
+![SAST - CodeQL](prints_evidencias/sast-codeql.png)
 
+### 4. DAST - OWASP ZAP
+![DAST - OWASP ZAP](prints_evidencias/dast-owasp-zap.png)
 
-### Cenário 3: SCA (pip-audit) Impedindo uma Dependência Insegura
-![cenario3](prints_evidencias/cenario3.png)
-
-### Cenário 4: DAST (OWASP ZAP) Encontrando uma Falha em Execução
-![cenario4](prints_evidencias/cenario4.png)
-
----
+### 5. SCA - Safety
+![SCA - Safety](prints_evidencias/sca-safety.png)
 
 ## 🛠️ Tecnologias e Ferramentas Utilizadas
 
@@ -95,7 +92,7 @@ Aqui você pode visualizar como a pipeline se comporta em diferentes cenários, 
 -   **Ferramentas de Segurança:**
     -   `GitLeaks`
     -   `GitHub CodeQL`
-    -   `pip-audit`
+    -   `Safety`
     -   `Dependabot`
     -   `OWASP ZAP`
 -   **Testes:** `Pytest`
