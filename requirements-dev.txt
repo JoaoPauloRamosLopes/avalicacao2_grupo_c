@@ -1,4 +1,19 @@
+# Testes
 pytest
 pytest-cov
+pytest-mock
+
+# Linting e Formatação
 flake8
+black
+isort
+
+# Análise de Segurança
+bandit>=1.7.5
+safety>=2.3.5
+gitleaks>=8.15.0
+semgrep>=1.25.0
+
+# Utilitários
 httpx
+python-dotenv

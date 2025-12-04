@@ -1,12 +1,44 @@
 version: 2
 updates:
+  # Atualiza as GitHub Actions usadas no workflow
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily" 
-    open-pull-requests-limit: 5
-
+      interval: "daily"  # Verifica atualizações diariamente
+    open-pull-requests-limit: 10
+    # Aplica labels automáticas aos PRs
+    labels:
+      - "dependencies"
+      - "github-actions"
+    # Permite apenas atualizações de patch e minor para evitar quebras
+    versioning-strategy: increase
+    
+  # Atualiza as dependências Python
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "daily"  # Verifica atualizações diariamente
+    open-pull-requests-limit: 10
+    # Ignora atualizações de versão major para evitar quebras
+    versioning-strategy: increase
+    # Aplica labels automáticas aos PRs
+    labels:
+      - "dependencies"
+      - "python"
+    # Configura a branch para criação dos PRs
+    target-branch: "dependabot-updates"
+    # Permite que o Dependabot faça rebase dos PRs automaticamente
+    rebase-strategy: "auto"
+    # Configura os revisores dos PRs (opcional)
+    reviewers:
+      - "seu-usuario-github"
+    # Configura os assignees dos PRs (opcional)
+    assignees:
+      - "seu-usuario-github"
+    # Ignora dependências específicas (opcional)
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+        # Exemplo de como ignorar uma dependência específica
+        # - dependency-name: "numpy"
+        #   versions: [">= 2.0.0, < 3.0.0"]
