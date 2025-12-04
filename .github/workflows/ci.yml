@@ -1,0 +1,193 @@
+name: CI Pipeline - SCA + SAST+ Security + Build + DAST
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+
+
+  # ---------------------------------------------
+  # 1) GITLEAKS
+  # ---------------------------------------------
+  gitleaks:
+    name: Secret Scan - GitLeaks
+    runs-on: ubuntu-latest
+    env:
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --report-format sarif --report-path gitleaks-report.sarif
+          #args: "--verbose --redact"
+      - name: Upload GitLeaks report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.sarif
+  
+        
+  # ---------------------------------------------
+  # 2) SAST - CODEQL
+  # ---------------------------------------------
+  sast-codeql:
+    name: SAST - CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read 
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          upload: false
+          
+      - name: Move SARIF file
+        run: mv ../results/python.sarif .
+      - name: Upload CodeQL SARIF report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-report
+          path: python.sarif
+      
+          
+  # ---------------------------------------------
+  # 3) BUILD + TEST + LINT
+  # ---------------------------------------------
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    needs: [gitleaks, sast-codeql]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -r requirements.txt
+      
+      - name: SCA Scan - Scan dependencies for vulnerabilities
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          export PYTHONPATH=.
+          flake8 app tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 app tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run tests
+        run: |
+          export PYTHONPATH=.
+          pytest -q
+  
+      - name: Create app artifact
+        run: |
+          zip -r app-dist.zip app/
+          mkdir -p artifacts
+          mv app-dist.zip artifacts/
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-dist
+          path: artifacts/app-dist.zip
+
+  # ---------------------------------------------
+  # 4) DAST - OWASP ZAP
+  # ---------------------------------------------
+  dast:
+    name: DAST - OWASP ZAP Scan
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Start FastAPI server
+        run: |
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 &>/tmp/app.log &
+          sleep 4
+          curl --fail http://localhost:8000/ || (echo "App offline"; exit 1)
+
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          mkdir -p zap-output
+          chmod 777 zap-output
+          docker run --network=host --rm -v $PWD/zap-output:/zap/wrk zaproxy/zap-stable \
+              zap-baseline.py -t http://localhost:8000 -r zap_report.html || true 
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-output/zap_report.html
+
+  # ---------------------------------------------
+  # 5) DEPLOY (opcional)
+  # ---------------------------------------------
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: dast
+    if: github.event_name == 'workflow_dispatch'  #Executa manualmente
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Azure Function
+        uses: Azure/functions-action@v1
+        with:
+          app-name: 'my-function-demo'
+          package: './app'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

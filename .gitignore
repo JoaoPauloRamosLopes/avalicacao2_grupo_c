@@ -1,0 +1,9 @@
+.terraform.lock.hcl
+my-function-demo.PublishSettings
+terraform.tfstate.backup
+terraform.tfstate
+terraform.exe
+__pycache__
+.terraform/*
+.venv
+venv/*
