@@ -31,7 +31,7 @@ jobs:
           args: detect --source . --report-format sarif --report-path gitleaks-report.sarif
           #args: "--verbose --redact"
       - name: Upload GitLeaks report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gitleaks-report
           path: gitleaks-report.sarif
@@ -64,7 +64,7 @@ jobs:
       - name: Move SARIF file
         run: mv ../results/python.sarif .
       - name: Upload CodeQL SARIF report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: codeql-report
           path: python.sarif
@@ -123,7 +123,7 @@ jobs:
           mv app-dist.zip artifacts/
           
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: app-dist
           path: artifacts/app-dist.zip
@@ -168,7 +168,7 @@ jobs:
               zap-baseline.py -t http://localhost:8000 -r zap_report.html || true 
 
       - name: Upload ZAP report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: zap-report
           path: zap-output/zap_report.html
